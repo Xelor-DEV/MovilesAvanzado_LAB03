@@ -19,7 +19,7 @@ GameObject:
   - component: {fileID: -6207403526858525563}
   m_Layer: 0
   m_Name: Sphere
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -178,6 +178,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  damage: 25
 --- !u!114 &8292236192680521743
 MonoBehaviour:
   m_ObjectHideFlags: 0

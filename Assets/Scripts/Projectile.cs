@@ -3,11 +3,25 @@ using Unity.Netcode;
 
 public class Projectile : NetworkBehaviour
 {
-    void Start()
+    public float damage = 25f;
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (IsServer)
+        if (!IsServer) return;
+
+        if (other.CompareTag("Wall"))
         {
-            Invoke("SimpleDespawn", 5);
+            SimpleDespawn();
+        }
+        else if (other.CompareTag("Enemy"))
+        {
+            // Damage the enemy
+            NetworkEnemy enemy = other.GetComponent<NetworkEnemy>();
+            if (enemy != null)
+            {
+                enemy.TakeDamageRpc(damage);
+            }
+            SimpleDespawn();
         }
     }
 

@@ -1,12 +1,32 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class NetworkEnemy : NetworkBehaviour
 {
     [SerializeField] private float moveSpeed = 3f;
+    [SerializeField] private Image healthBar;
+    [SerializeField] private float maxHealth = 100f;
 
+    private NetworkVariable<float> currentHealth = new NetworkVariable<float>();
     private Transform targetPlayer;
     private EnemySpawner spawner;
+
+    public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+            currentHealth.Value = maxHealth;
+        }
+
+        // Subscribe to health changes
+        currentHealth.OnValueChanged += OnHealthChanged;
+        UpdateHealthBar();
+    }
+    public override void OnNetworkDespawn()
+    {
+        currentHealth.OnValueChanged -= OnHealthChanged;
+    }
 
     public void SetSpawner(EnemySpawner enemySpawner)
     {
@@ -17,9 +37,13 @@ public class NetworkEnemy : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        MoveTowardsPlayer();
-
         FindClosestPlayerRpc();
+
+        if (targetPlayer != null)
+        {
+            Vector3 moveDirection = (targetPlayer.position - transform.position).normalized;
+            RequestMoveRpc(moveDirection);
+        }
     }
 
     [Rpc(SendTo.Server)]
@@ -42,17 +66,39 @@ public class NetworkEnemy : NetworkBehaviour
         }
     }
 
-    private void MoveTowardsPlayer()
+    [Rpc(SendTo.Server)]
+    private void RequestMoveRpc(Vector3 direction)
     {
-        if (targetPlayer == null) return;
+        transform.position += direction * moveSpeed * Time.deltaTime;
 
-        Vector3 moveDirection = (targetPlayer.position - transform.position).normalized;
-        transform.position += moveDirection * moveSpeed * Time.deltaTime;
-
-        if (moveDirection != Vector3.zero)
+        if (direction != Vector3.zero)
         {
-            transform.rotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.LookRotation(direction);
         }
+    }
+
+    private void OnHealthChanged(float previousValue, float newValue)
+    {
+        UpdateHealthBar();
+
+        if (newValue <= 0 && IsServer)
+        {
+            Die();
+        }
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = currentHealth.Value / maxHealth;
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void TakeDamageRpc(float damage)
+    {
+        currentHealth.Value -= damage;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -61,10 +107,20 @@ public class NetworkEnemy : NetworkBehaviour
         {
             EnemyCollisionPlayerRpc();
         }
+        else if (other.CompareTag("Projectile") && IsServer)
+        {
+            float damage = other.GetComponent<Projectile>().damage;
+            TakeDamageRpc(damage);
+        }
     }
 
     [Rpc(SendTo.Server)]
     public void EnemyCollisionPlayerRpc()
+    {
+        Die();
+    }
+
+    private void Die()
     {
         GetComponent<NetworkObject>().Despawn();
         spawner.EnemyDestroyed();
