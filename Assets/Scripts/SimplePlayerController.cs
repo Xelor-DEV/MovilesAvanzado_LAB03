@@ -22,12 +22,8 @@ public class SimplePlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
-        {
-            float VelX = Input.GetAxisRaw("Horizontal") * Speed * Time.deltaTime;
-            float VelY = Input.GetAxisRaw("Vertical") * Speed * Time.deltaTime;
-            UpdatePositionRpc(VelX, VelY);
-        }
+        HandleMovement();
+        HandleRotation();
         CheckGroundRpc();
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -35,26 +31,33 @@ public class SimplePlayerController : NetworkBehaviour
             JumpTriggerRpc("Jump");
         }
 
-        /*
         if (Input.GetMouseButtonDown(0))
         {
             ShootRpc();
         }
-        */
+    }
 
-        if (Input.GetMouseButtonDown(0))
+    private void HandleMovement()
+    {
+        if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
         {
-            // Obtener posición del clic en el mundo
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
-            {
-                Vector3 targetPosition = hit.point;
-                // Ignorar diferencia en altura (eje Y)
-                targetPosition.y = transform.position.y;
-                // Rotar hacia el punto y disparar
-                RotateAndShootRpc(targetPosition);
-            }
+            float VelX = Input.GetAxisRaw("Horizontal") * Speed * Time.deltaTime;
+            float VelY = Input.GetAxisRaw("Vertical") * Speed * Time.deltaTime;
+            UpdatePositionRpc(VelX, VelY);
+        }
+    }
 
+    private void HandleRotation()
+    {
+        // Crear un rayo desde la cámara hasta la posición del ratón
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            Vector3 targetPosition = hit.point;
+            targetPosition.y = transform.position.y; // Mantener la altura del personaje
+            UpdateRotationRpc(targetPosition);
         }
     }
 
@@ -62,6 +65,17 @@ public class SimplePlayerController : NetworkBehaviour
     public void UpdatePositionRpc(float x, float y)
     {
         transform.position += new Vector3(x, 0, y);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void UpdateRotationRpc(Vector3 targetPosition)
+    {
+        Vector3 direction = targetPosition - transform.position;
+        if (direction != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Euler(0, targetRotation.eulerAngles.y, 0);
+        }
     }
 
     [Rpc(SendTo.Server)]
@@ -87,34 +101,11 @@ public class SimplePlayerController : NetworkBehaviour
         }
     }
 
-    /*
     [Rpc(SendTo.Server)]
     public void ShootRpc()
     {
-        GameObject proj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
-        proj.GetComponent<NetworkObject>().Spawn(true);
-
-        proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * 5, ForceMode.Impulse);
-    }
-    */
-
-    [Rpc(SendTo.Server)]
-    public void RotateAndShootRpc(Vector3 targetPosition)
-    {
-        // Rotar solo en el eje Y hacia el punto objetivo
-        Vector3 direction = targetPosition - transform.position;
-        direction.y = 0; // Ignorar diferencia en altura
-
-        if (direction != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Euler(0, targetRotation.eulerAngles.y, 0);
-        }
-
-        // Disparar después de rotar
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         proj.GetComponent<NetworkObject>().Spawn(true);
         proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * 5, ForceMode.Impulse);
     }
-
 }

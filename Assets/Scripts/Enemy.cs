@@ -107,11 +107,6 @@ public class NetworkEnemy : NetworkBehaviour
         {
             EnemyCollisionPlayerRpc();
         }
-        else if (other.CompareTag("Projectile") && IsServer)
-        {
-            float damage = other.GetComponent<Projectile>().damage;
-            TakeDamageRpc(damage);
-        }
     }
 
     [Rpc(SendTo.Server)]
