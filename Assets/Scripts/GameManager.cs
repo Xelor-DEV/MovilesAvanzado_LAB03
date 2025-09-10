@@ -1,6 +1,7 @@
-using UnityEngine;
-using Unity.Netcode;
 using System.Collections.Generic;
+using Unity.Netcode;
+using UnityEditor.PackageManager;
+using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
@@ -8,6 +9,7 @@ public class GameManager : NetworkBehaviour
 
     public GameObject playerPrefab;
     public GameObject buffPrefab;
+    public CameraFollower cameraFollower;
 
     public float BuffSpawnCount = 4;
     public float currentBuffCount = 0;

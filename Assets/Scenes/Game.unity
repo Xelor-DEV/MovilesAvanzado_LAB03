@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -179,9 +180,9 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 81.4
   orthographic: 0
-  orthographic size: 5
+  orthographic size: 23.17
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -205,13 +206,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.11725836, y: 0.8827388, z: -0.32053488, w: -0.32292432}
-  m_LocalPosition: {x: 4.2246394, y: 6.8555756, z: 2.6999824}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 4.903, z: 0.023}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,6 +257,24 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c53b1b34aceeb5f42839e3ae6122a8b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  offset: {x: 0, y: 4.903, z: 0.023}
+  calculateInitialOffset: 0
+  showGizmos: 1
+  gizmoColor: {r: 0, g: 1, b: 1, a: 1}
+  sphereSize: 0.2
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,7 +524,7 @@ MonoBehaviour:
   enemyPrefab: {fileID: 567543829884360062, guid: 16acefd8bfda71e4d9e24b687764b175, type: 3}
   spawnInterval: 3
   maxEnemies: 10
-  spawnArea: {x: 50, y: 50}
+  spawnArea: {x: 25, y: 25}
 --- !u!4 &624257683
 Transform:
   m_ObjectHideFlags: 0
@@ -741,7 +760,7 @@ Transform:
   m_GameObject: {fileID: 901586464}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0, y: 2, z: 48.69}
+  m_LocalPosition: {x: -0, y: 2, z: 13.29}
   m_LocalScale: {x: 1, y: 5, z: 120}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -849,7 +868,7 @@ Transform:
   m_GameObject: {fileID: 1041439132}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 48.54, y: 2, z: 0}
+  m_LocalPosition: {x: 13.45, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 5, z: 120}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -957,7 +976,7 @@ Transform:
   m_GameObject: {fileID: 1051361162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -48.54, y: 2, z: 0}
+  m_LocalPosition: {x: -13.08, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 5, z: 120}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1234,6 +1253,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   playerPrefab: {fileID: 2076614573960409832, guid: 76c6ec737901f4d4a892d70a7517ad2d, type: 3}
   buffPrefab: {fileID: 3684658681988332575, guid: 0933ff315f3960143a67464335c0052d, type: 3}
+  cameraFollower: {fileID: 330585548}
   BuffSpawnCount: 4
   currentBuffCount: 0
   players: []
@@ -1354,7 +1374,7 @@ Transform:
   m_GameObject: {fileID: 1600382876}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0, y: 2, z: -48.69}
+  m_LocalPosition: {x: 0, y: 2, z: -13.35}
   m_LocalScale: {x: 1, y: 5, z: 120}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -5,6 +5,7 @@ public class SimplePlayerController : NetworkBehaviour
 {
     public float JumpForce = 5;
     public float Speed = 10 ;
+    public float bulletSpeed = 15;
 
     private Animator animator;
     private Rigidbody rb;
@@ -16,6 +17,11 @@ public class SimplePlayerController : NetworkBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+
+        if (IsOwner)
+        {
+            GameManager.Instance.cameraFollower.SetTarget(gameObject.transform);
+        }
     }
 
     public void Update()
@@ -106,6 +112,6 @@ public class SimplePlayerController : NetworkBehaviour
     {
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         proj.GetComponent<NetworkObject>().Spawn(true);
-        proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * 5, ForceMode.Impulse);
+        proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * bulletSpeed, ForceMode.Impulse);
     }
 }
