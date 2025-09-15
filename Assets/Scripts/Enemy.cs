@@ -49,6 +49,7 @@ public class NetworkEnemy : NetworkBehaviour
     [Rpc(SendTo.Server)]
     private void FindClosestPlayerRpc()
     {
+        /*
         if (GameManager.Instance.players.Count == 0) return;
 
         float closestDistance = Mathf.Infinity;
@@ -64,6 +65,7 @@ public class NetworkEnemy : NetworkBehaviour
                 targetPlayer = player.transform;
             }
         }
+        */
     }
 
     [Rpc(SendTo.Server)]

@@ -3,7 +3,12 @@ using Unity.Netcode;
 
 public class Projectile : NetworkBehaviour
 {
-    public float damage = 25f;
+    public int damage = 25;
+    private ulong ownerClientId;
+    public void SetOwner(ulong clientId)
+    {
+        ownerClientId = clientId;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -22,6 +27,19 @@ public class Projectile : NetworkBehaviour
                 enemy.TakeDamageRpc(damage);
             }
             SimpleDespawn();
+        }
+        else if (other.CompareTag("Player"))
+        {
+            // Damage the player (but not the owner of the projectile)
+            if (other.GetComponent<NetworkObject>().OwnerClientId != ownerClientId)
+            {
+                SimplePlayerController player = other.GetComponent<SimplePlayerController>();
+                if (player != null)
+                {
+                    player.TakeDamage(damage);
+                }
+                SimpleDespawn();
+            }
         }
     }
 

@@ -1,8 +1,16 @@
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Collections;
+using UnityEngine.UI;
 
 public class SimplePlayerController : NetworkBehaviour
 {
+    public NetworkVariable<FixedString32Bytes> accountID = new NetworkVariable<FixedString32Bytes>();
+
+    public NetworkVariable<int> health = new NetworkVariable<int>();
+
+    public NetworkVariable<int> attack = new NetworkVariable<int>();
+    
     public float JumpForce = 5;
     public float Speed = 10 ;
     public float bulletSpeed = 15;
@@ -14,15 +22,90 @@ public class SimplePlayerController : NetworkBehaviour
     public GameObject projectilePrefab;
     public Transform firePoint;
 
-    void Start()
+    public Image lifeBar;
+
+    /*
+    public void Start()
     {
         animator = GetComponent<Animator>();
 
         if (IsOwner)
         {
             GameManager.Instance.cameraFollower.SetTarget(gameObject.transform);
+            lifeBar = GameManager.Instance.lifeBar;
         }
     }
+    */
+
+    public override void OnNetworkSpawn()
+    {
+        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+
+        // Suscribirse a cambios de salud
+        health.OnValueChanged += OnHealthChanged;
+
+        if (IsOwner)
+        {
+            GameManager.Instance.cameraFollower.SetTarget(gameObject.transform);
+            lifeBar = GameManager.Instance.lifeBar;
+            UpdateHealthBar();
+        }
+    }
+
+    private void OnHealthChanged(int oldHealth, int newHealth)
+    {
+        if (IsOwner)
+        {
+            UpdateHealthBar();
+        }
+
+        if (newHealth <= 0 && IsServer)
+        {
+            HandleDeath();
+        }
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (lifeBar != null)
+        {
+            lifeBar.fillAmount = health.Value / 100f;
+        }
+    }
+
+    private void HandleDeath()
+    {
+        RespawnPlayerRpc(accountID.Value.ToString());
+        print("dEATH");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RespawnPlayerRpc(string accountId)
+    {
+        print("llamadno rpc");
+        PlayerData player = GameManager.Instance.RespawnPlayer(accountId);
+        SetData(player);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (IsServer)
+        {
+            health.Value -= damage;
+        }
+        else
+        {
+            TakeDamageServerRpc(damage);
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    private void TakeDamageServerRpc(int damage)
+    {
+        health.Value -= damage;
+    }
+
 
     public void Update()
     {
@@ -113,5 +196,41 @@ public class SimplePlayerController : NetworkBehaviour
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         proj.GetComponent<NetworkObject>().Spawn(true);
         proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * bulletSpeed, ForceMode.Impulse);
+        proj.GetComponent<Projectile>().damage = attack.Value;
+        proj.GetComponent<Projectile>().SetOwner(OwnerClientId);
+    }
+
+    public void SetData(PlayerData data)
+    {
+        accountID.Value = data.accountID;
+        health.Value = data.health;
+        attack.Value = data.attack;
+        transform.position = data.position;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        health.OnValueChanged -= OnHealthChanged;
+
+        GameManager.Instance.playerStatesByAccountID[accountID.Value.ToString()] = new PlayerData(accountID.Value.ToString(), transform.position, health.Value, attack.Value);
+
+        print("Me e desconectado" + NetworkManager.Singleton.LocalClientId +  " y se a guardado la data de " + accountID.Value);
+        // antes de destruirse se llama
+    }
+}
+
+public class PlayerData
+{
+    public string accountID;
+    public Vector3 position;
+    public int health;
+    public int attack;
+
+    public PlayerData(string id, Vector3 position, int health, int attack)
+    {
+        accountID = id;
+        this.position = position;
+        this.health = health;
+        this.attack = attack;
     }
 }

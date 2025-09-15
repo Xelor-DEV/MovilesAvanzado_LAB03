@@ -15,11 +15,21 @@ public class RandomBuff : NetworkBehaviour
            AddBuffToPlayerRpc(playerID);
         }
     }
+
     [Rpc(SendTo.Server)]
     private void AddBuffToPlayerRpc(ulong playerID)
     {
-        print("Aplicar buff a :" + playerID);
-        //AddHPToPlayerRpc(playerID, 10);
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerID, out var client))
+        {
+            var playerObj = client.PlayerObject;
+            var controller = playerObj.GetComponent<SimplePlayerController>();
+
+            // Aumentar ataque entre 1 y 3
+            int buffAmount = Random.Range(1, 4);
+            controller.attack.Value += buffAmount;
+
+            Debug.Log($"Aplicado buff de +{buffAmount} de ataque a jugador {playerID}");
+        }
 
         GetComponent<NetworkObject>().Despawn(true);
     }
