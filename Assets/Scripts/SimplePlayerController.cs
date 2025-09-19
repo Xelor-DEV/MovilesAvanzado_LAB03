@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using Unity.Collections;
 using UnityEngine.UI;
+using System.Collections;
 
 public class SimplePlayerController : NetworkBehaviour
 {
@@ -10,7 +11,10 @@ public class SimplePlayerController : NetworkBehaviour
     public NetworkVariable<int> health = new NetworkVariable<int>();
 
     public NetworkVariable<int> attack = new NetworkVariable<int>();
-    
+
+    private NetworkVariable<float> animationSpeed = new NetworkVariable<float>();
+    private bool isShooting = false;
+
     public float JumpForce = 5;
     public float Speed = 10 ;
     public float bulletSpeed = 15;
@@ -44,6 +48,7 @@ public class SimplePlayerController : NetworkBehaviour
 
         // Suscribirse a cambios de salud
         health.OnValueChanged += OnHealthChanged;
+        animationSpeed.OnValueChanged += OnAnimationSpeedChanged;
 
         if (IsOwner)
         {
@@ -62,6 +67,7 @@ public class SimplePlayerController : NetworkBehaviour
 
         if (newHealth <= 0 && IsServer)
         {
+            animator.SetBool("IsShooting", false);
             HandleDeath();
         }
     }
@@ -128,13 +134,34 @@ public class SimplePlayerController : NetworkBehaviour
 
     private void HandleMovement()
     {
-        if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 movement = new Vector3(horizontal, 0, vertical);
+
+        // Calcula la velocidad para las animaciones
+        float speedValue = movement.magnitude;
+        UpdateAnimationSpeedRpc(speedValue);
+
+        if (speedValue > 0)
         {
-            float VelX = Input.GetAxisRaw("Horizontal") * Speed * Time.deltaTime;
-            float VelY = Input.GetAxisRaw("Vertical") * Speed * Time.deltaTime;
+            float VelX = horizontal * Speed * Time.deltaTime;
+            float VelY = vertical * Speed * Time.deltaTime;
             UpdatePositionRpc(VelX, VelY);
         }
     }
+
+    private void ResetShooting()
+    {
+        isShooting = false;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void UpdateAnimationSpeedRpc(float speed)
+    {
+        animationSpeed.Value = speed;
+        animator.SetFloat("Speed", speed);
+    }
+
 
     private void HandleRotation()
     {
@@ -193,11 +220,29 @@ public class SimplePlayerController : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void ShootRpc()
     {
+        // Activar la animación de disparo
+        animator.SetBool("IsShooting", true);
+
+        // Crear el proyectil
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         proj.GetComponent<NetworkObject>().Spawn(true);
         proj.GetComponent<Rigidbody>().AddForce(firePoint.forward * bulletSpeed, ForceMode.Impulse);
         proj.GetComponent<Projectile>().damage = attack.Value;
         proj.GetComponent<Projectile>().SetOwner(OwnerClientId);
+
+        // Programar el fin de la animación después de un tiempo
+        StartCoroutine(EndShootingAnimation(0.15f)); // Ajusta según duración de tu animación
+    }
+
+    private IEnumerator EndShootingAnimation(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        animator.SetBool("IsShooting", false);
+    }
+
+    private void OnAnimationSpeedChanged(float oldSpeed, float newSpeed)
+    {
+        animator.SetFloat("Speed", newSpeed);
     }
 
     public void SetData(PlayerData data)
@@ -211,6 +256,7 @@ public class SimplePlayerController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         health.OnValueChanged -= OnHealthChanged;
+        animationSpeed.OnValueChanged -= OnAnimationSpeedChanged;
 
         GameManager.Instance.playerStatesByAccountID[accountID.Value.ToString()] = new PlayerData(accountID.Value.ToString(), transform.position, health.Value, attack.Value);
 
