@@ -1,4 +1,4 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 using Unity.Netcode;
 using Unity.Collections;
 using UnityEngine.UI;
@@ -17,7 +17,7 @@ public class SimplePlayerController : NetworkBehaviour
 
     public float JumpForce = 5;
     public float Speed = 10 ;
-    public float bulletSpeed = 15;
+    public float bulletSpeed = 35;
 
     private Animator animator;
     private Rigidbody rb;
@@ -27,6 +27,7 @@ public class SimplePlayerController : NetworkBehaviour
     public Transform firePoint;
 
     public Image lifeBar;
+    public Image worldLifeBar;
 
     /*
     public void Start()
@@ -50,6 +51,17 @@ public class SimplePlayerController : NetworkBehaviour
         health.OnValueChanged += OnHealthChanged;
         animationSpeed.OnValueChanged += OnAnimationSpeedChanged;
 
+        if (worldLifeBar != null)
+        {
+            worldLifeBar.fillAmount = health.Value / 100f;
+
+            // Ocultar barra de mundo para el jugador local
+            if (IsOwner)
+            {
+                worldLifeBar.gameObject.SetActive(false);
+            }
+        }
+
         if (IsOwner)
         {
             GameManager.Instance.cameraFollower.SetTarget(gameObject.transform);
@@ -63,6 +75,11 @@ public class SimplePlayerController : NetworkBehaviour
         if (IsOwner)
         {
             UpdateHealthBar();
+        }
+
+        if (!IsOwner && worldLifeBar != null)
+        {
+            worldLifeBar.fillAmount = newHealth / 100f;
         }
 
         if (newHealth <= 0 && IsServer)
@@ -165,7 +182,7 @@ public class SimplePlayerController : NetworkBehaviour
 
     private void HandleRotation()
     {
-        // Crear un rayo desde la c醡ara hasta la posici髇 del rat髇
+        // Crear un rayo desde la c锟絤ara hasta la posici锟絥 del rat锟絥
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
@@ -194,6 +211,8 @@ public class SimplePlayerController : NetworkBehaviour
         }
     }
 
+
+
     [Rpc(SendTo.Server)]
     public void JumpTriggerRpc(string animationName)
     {
@@ -220,7 +239,7 @@ public class SimplePlayerController : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void ShootRpc()
     {
-        // Activar la animaci髇 de disparo
+        // Activar la animaci贸n de disparo
         animator.SetBool("IsShooting", true);
 
         // Crear el proyectil
@@ -230,8 +249,8 @@ public class SimplePlayerController : NetworkBehaviour
         proj.GetComponent<Projectile>().damage = attack.Value;
         proj.GetComponent<Projectile>().SetOwner(OwnerClientId);
 
-        // Programar el fin de la animaci髇 despu閟 de un tiempo
-        StartCoroutine(EndShootingAnimation(0.15f)); // Ajusta seg鷑 duraci髇 de tu animaci髇
+        // Programar el fin de la animaci贸n despu茅s de un tiempo
+        StartCoroutine(EndShootingAnimation(0.15f)); // Ajusta seg煤n duraci贸n de tu animaci贸n
     }
 
     private IEnumerator EndShootingAnimation(float duration)

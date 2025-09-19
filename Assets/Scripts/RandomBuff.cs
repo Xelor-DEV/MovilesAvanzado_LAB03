@@ -3,16 +3,41 @@ using UnityEngine;
 
 public class RandomBuff : NetworkBehaviour
 {
+    [Header("Visual Settings")]
+    public Transform model; // Referencia al objeto modelo que se animará
+    public float rotationSpeed = 45f; // Velocidad de rotación en grados/segundo
+    public float bobHeight = 0.5f; // Altura del movimiento vertical
+    public float bobSpeed = 2f; // Velocidad del movimiento vertical
+
+    private Vector3 initialPosition; // Posición inicial del modelo
+
     void Start()
     {
-        
+        // Guardar la posición inicial relativa si el modelo existe
+        if (model != null)
+        {
+            initialPosition = model.localPosition;
+        }
     }
+
+    void Update()
+    {
+        if (model == null) return;
+
+        // Rotación continua suave
+        model.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.World);
+
+        // Movimiento vertical suave (sube y baja)
+        float newY = initialPosition.y + Mathf.Sin(Time.time * bobSpeed) * bobHeight;
+        model.localPosition = new Vector3(initialPosition.x, newY, initialPosition.z);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-           ulong playerID =  other.GetComponent<NetworkObject>().OwnerClientId;
-           AddBuffToPlayerRpc(playerID);
+            ulong playerID = other.GetComponent<NetworkObject>().OwnerClientId;
+            AddBuffToPlayerRpc(playerID);
         }
     }
 
@@ -33,14 +58,4 @@ public class RandomBuff : NetworkBehaviour
 
         GetComponent<NetworkObject>().Despawn(true);
     }
-    /*[Rpc(SendTo.Server)]
-    public void AddHPToPlayerRpc(ulong playerID, int amount)
-    {
-        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerID, out var client))
-        {
-            var playerObj = client.PlayerObject;
-            var controller = playerObj.GetComponent<SimplePlayerController>();
-            controller.Life.Value += amount;
-        }
-    }*/
 }
