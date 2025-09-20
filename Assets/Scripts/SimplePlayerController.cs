@@ -182,14 +182,18 @@ public class SimplePlayerController : NetworkBehaviour
 
     private void HandleRotation()
     {
-        // Crear un rayo desde la c�mara hasta la posici�n del rat�n
+        if (!IsOwner) return;
+    
+        // Crear un rayo desde la cámara local hacia la posición del ratón
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-
+    
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             Vector3 targetPosition = hit.point;
             targetPosition.y = transform.position.y; // Mantener la altura del personaje
+            
+            // Enviar la posición de destino al servidor para actualizar la rotación
             UpdateRotationRpc(targetPosition);
         }
     }
