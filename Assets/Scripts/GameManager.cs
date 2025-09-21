@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Cinemachine;
 
 public class GameManager : NetworkBehaviour
 {
@@ -10,7 +11,7 @@ public class GameManager : NetworkBehaviour
 
     public GameObject playerPrefab;
     public GameObject buffPrefab;
-    public CameraFollower cameraFollower;
+    public CinemachineCamera virtualCamera;
     public Image lifeBar;
 
     public float BuffSpawnCount = 4;

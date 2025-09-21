@@ -64,7 +64,8 @@ public class SimplePlayerController : NetworkBehaviour
 
         if (IsOwner)
         {
-            GameManager.Instance.cameraFollower.SetTarget(gameObject.transform);
+            GameManager.Instance.virtualCamera.Follow = gameObject.transform;
+            GameManager.Instance.virtualCamera.LookAt = gameObject.transform;
             lifeBar = GameManager.Instance.lifeBar;
             UpdateHealthBar();
         }
